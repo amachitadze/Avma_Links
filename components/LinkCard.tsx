@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import type { LinkItem } from '../types.ts';
+import type { LinkItem, ViewMode } from '../types.ts';
 
 interface LinkCardProps {
   link: LinkItem;
-  viewMode: 'grid' | 'list';
+  viewMode: ViewMode;
   onShowActionMenu: (link: LinkItem, categoryTitle: string) => void;
   isEditable: boolean;
   isMoveMode: boolean;
@@ -18,23 +18,27 @@ const getHostname = (url: string): string => {
   if (typeof url !== 'string' || !url.trim()) {
     return '';
   }
+
+  let fullUrl = url;
+  // If the URL doesn't have a protocol, prepend https://
+  // This handles "google.com" and "//google.com"
+  if (!/^[a-z][a-z0-9+.-]*:/.test(url)) {
+    fullUrl = `https://${url.replace(/^\/\//, '')}`;
+  }
+
   try {
-    // First, try to parse the URL as is. This correctly handles absolute URLs
-    // with various schemes (http, https, mailto, etc.). For many non-http
-    // schemes, hostname will correctly be an empty string.
-    return new URL(url).hostname;
-  } catch (e) {
-    // If that fails, it might be a URL without a protocol (e.g., "google.com")
-    // or a protocol-relative URL (e.g., "//google.com").
-    try {
-      // Prepending 'https:' handles both cases.
-      const fullUrl = `https:${url.startsWith('//') ? '' : '//'}${url}`;
-      return new URL(fullUrl).hostname;
-    } catch (error) {
-      console.warn(`Could not parse URL to get hostname: "${url}"`, error);
-      // Provide a fallback for truly invalid URLs.
-      return url.replace(/^(.*:)?(\/\/)?(www\.)?/, '').split('/')[0];
+    const parsedUrl = new URL(fullUrl);
+    // For non-http URLs, hostname is often empty, which is what we want.
+    if (parsedUrl.protocol.startsWith('http')) {
+        return parsedUrl.hostname;
     }
+    return ''; // Don't show a "hostname" for mailto, tel, etc.
+  } catch (e) {
+    console.warn(`Could not get hostname for URL: "${url}"`);
+    // Fallback for URLs that are still invalid after prefixing.
+    // This grabs the part after an optional protocol/www and before the first slash.
+    const domainMatch = url.trim().replace(/^(.*:)?(\/\/)?(www\.)?/, '').split('/')[0];
+    return domainMatch || '';
   }
 };
 
@@ -126,7 +130,7 @@ const LinkCard: React.FC<LinkCardProps> = ({
   const wrapperClasses = `
     relative
     ${isBeingDragged ? 'opacity-40' : ''}
-    ${isOver ? 'ring-2 ring-primary-light dark:ring-primary-dark rounded-2xl' : ''}
+    ${isOver ? 'ring-2 ring-primary-light dark:ring-primary-dark rounded-lg' : ''}
     ${isMoveMode && isEditable ? 'cursor-grab' : ''}
   `;
 
@@ -141,6 +145,12 @@ const LinkCard: React.FC<LinkCardProps> = ({
     group flex items-center p-3 bg-surface-container-low-light dark:bg-surface-container-low-dark 
     rounded-xl border hover:bg-surface-container-light dark:hover:bg-surface-container-dark 
     transition-all duration-200 w-full h-full border-transparent
+  `;
+  
+  const chromeViewLinkClasses = `
+    group flex items-center p-1.5 rounded-md
+    hover:bg-surface-container-light dark:hover:bg-surface-container-dark 
+    transition-colors duration-200 w-full
   `;
 
   const cardContentGrid = (
@@ -164,8 +174,24 @@ const LinkCard: React.FC<LinkCardProps> = ({
     </>
   );
 
-  const anchorClasses = viewMode === 'grid' ? gridViewLinkClasses : listViewLinkClasses;
-  const cardContent = viewMode === 'grid' ? cardContentGrid : cardContentList;
+  const cardContentChrome = (
+    <>
+      <img src={link.faviconUrl} alt={`${link.name} favicon`} className="w-5 h-5 mr-3 object-contain flex-shrink-0" />
+      <div className="flex-grow truncate">
+        <h3 className="font-normal text-sm text-on-surface-light dark:text-on-surface-dark truncate">{link.name}</h3>
+      </div>
+    </>
+  );
+
+  const anchorClasses = 
+    viewMode === 'grid' ? gridViewLinkClasses 
+    : viewMode === 'list' ? listViewLinkClasses 
+    : chromeViewLinkClasses;
+  
+  const cardContent = 
+    viewMode === 'grid' ? cardContentGrid 
+    : viewMode === 'list' ? cardContentList 
+    : cardContentChrome;
 
   return (
     <div

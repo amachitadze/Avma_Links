@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { LINK_DATA } from './constants.ts';
-import type { LinkCategory, LinkItem } from './types.ts';
+import type { LinkCategory, LinkItem, ViewMode } from './types.ts';
 import Header from './components/Header.tsx';
 import SearchBar from './components/SearchBar.tsx';
 import CategorySection from './components/CategorySection.tsx';
@@ -12,7 +12,6 @@ import ChromeBookmarksViewer from './components/ChromeBookmarksViewer.tsx';
 import BottomActionMenu from './components/TopActionMenu.tsx';
 import MoveModeControls from './components/MoveModeControls.tsx';
 
-type ViewMode = 'grid' | 'list';
 type ModalMode = 'add' | 'edit';
 type AppView = 'main' | 'chromeImport';
 
@@ -39,6 +38,39 @@ interface ActionMenuState {
   link?: LinkItem;
   categoryTitle?: string;
 }
+
+const normalizeUrl = (urlString: string): string => {
+  if (!urlString || typeof urlString !== 'string') return '';
+
+  let fullUrl = urlString.trim();
+  // If the URL doesn't have a protocol, prepend https://
+  // This handles "google.com" and "//google.com"
+  if (!/^[a-z][a-z0-9+.-]*:/.test(fullUrl)) {
+    fullUrl = `https://${fullUrl.replace(/^\/\//, '')}`;
+  }
+
+  try {
+    const url = new URL(fullUrl);
+    // Only normalize http/https protocols. For others, use a simple fallback.
+    if (!url.protocol.startsWith('http')) {
+      throw new Error('Not an HTTP URL');
+    }
+    let path = url.pathname;
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.slice(0, -1);
+    }
+    const host = url.hostname.replace(/^www\./, '');
+    return `${host}${path}${url.search}${url.hash}`.toLowerCase();
+  } catch (e) {
+    // Fallback for invalid URLs or non-http URLs
+    return urlString
+      .trim()
+      .replace(/^(https?:\/\/)?(www\.)?/i, '')
+      .replace(/\/$/, '')
+      .toLowerCase();
+  }
+};
+
 
 const App: React.FC = () => {
   const [linkData, setLinkData] = useState<LinkCategory[]>(() => {
@@ -160,7 +192,25 @@ const App: React.FC = () => {
     setConfirmDeleteModalState({ isOpen: false });
   };
 
-  const handleSaveLink = (link: LinkItem, categoryTitle: string, originalId?: string) => {
+  const handleSaveLink = (link: LinkItem, categoryTitle: string, originalId?: string): string | null => {
+    const normalizedNewUrl = normalizeUrl(link.url);
+    if (!normalizedNewUrl) {
+      return "The URL provided is not valid.";
+    }
+    
+    for (const category of linkData) {
+      for (const existingLink of category.links) {
+        // When editing, skip comparing the link against its original self
+        if (originalId && existingLink.id === originalId) {
+          continue;
+        }
+        
+        if (normalizeUrl(existingLink.url) === normalizedNewUrl) {
+          return `This link already exists in the "${category.title}" category.`;
+        }
+      }
+    }
+
     const getFavicon = (url: string) => `https://www.google.com/s2/favicons?sz=64&domain_url=${url}`;
     const newLink = { ...link, faviconUrl: getFavicon(link.url) };
 
@@ -194,6 +244,7 @@ const App: React.FC = () => {
       });
     }
     setModalState({ isOpen: false, mode: 'add' });
+    return null; // Indicates success
   };
 
   const handleExport = () => {

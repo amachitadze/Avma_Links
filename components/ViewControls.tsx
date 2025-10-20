@@ -1,7 +1,6 @@
 import React from 'react';
 import { Icon } from './icons.tsx';
-
-type ViewMode = 'grid' | 'list';
+import type { ViewMode } from '../types.ts';
 
 interface ViewControlsProps {
   viewMode: ViewMode;
@@ -23,6 +22,9 @@ const ViewControls: React.FC<ViewControlsProps> = ({ viewMode, setViewMode }) =>
       </button>
       <button onClick={() => setViewMode('list')} className={buttonClasses(viewMode === 'list')} aria-label="List view">
         <Icon name="viewList" className="w-5 h-5" />
+      </button>
+      <button onClick={() => setViewMode('chrome')} className={buttonClasses(viewMode === 'chrome')} aria-label="Folder view">
+        <Icon name="folder" className="w-5 h-5" />
       </button>
     </div>
   );

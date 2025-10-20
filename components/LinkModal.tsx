@@ -6,7 +6,7 @@ import { Icon } from './icons.tsx';
 interface LinkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (link: LinkItem, categoryTitle: string, originalId?: string) => void;
+  onSave: (link: LinkItem, categoryTitle: string, originalId?: string) => string | null;
   linkToEdit?: LinkItem;
   categoryTitle?: string;
   allCategories: string[];
@@ -20,6 +20,7 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, linkToEd
   const [category, setCategory] = useState('');
   const [isNewCategory, setIsNewCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,6 +39,7 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, linkToEd
         setIsNewCategory(allCategories.length === 0);
         setNewCategory('');
       }
+      setError(null); // Reset error when modal opens/changes
     }
   }, [isOpen, mode, linkToEdit, categoryTitle, allCategories]);
 
@@ -45,7 +47,7 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, linkToEd
     e.preventDefault();
     const finalCategory = isNewCategory ? newCategory : category;
     if (!name || !url || !finalCategory) {
-      alert('Name, URL, and Category are required.');
+      setError('Name, URL, and Category are required.');
       return;
     }
 
@@ -56,7 +58,12 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, linkToEd
       description,
       faviconUrl: '', // Will be generated in App.tsx
     };
-    onSave(savedLink, finalCategory, linkToEdit?.id);
+    
+    const saveError = onSave(savedLink, finalCategory, linkToEdit?.id);
+    if (saveError) {
+      setError(saveError);
+    } 
+    // On success, the parent component closes the modal, so no `else` block is needed here.
   };
 
   if (!isOpen) return null;
@@ -71,27 +78,33 @@ const LinkModal: React.FC<LinkModalProps> = ({ isOpen, onClose, onSave, linkToEd
           {mode === 'add' ? 'Add New Link' : 'Edit Link'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="flex items-center gap-3 p-3 text-sm bg-surface-light dark:bg-surface-container-highest-light border border-outline-light dark:border-outline-dark rounded-lg" role="alert">
+              <Icon name="error" className="w-5 h-5 flex-shrink-0 text-error-light dark:text-error-dark" />
+              <span className="text-error-light dark:text-error-dark font-medium">{error}</span>
+            </div>
+          )}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-on-surface-variant-light dark:text-on-surface-variant-dark mb-1">Name</label>
-            <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} required className="w-full input-style" />
+            <input type="text" id="name" value={name} onChange={e => { setName(e.target.value); setError(null); }} required className="w-full input-style" />
           </div>
           <div>
             <label htmlFor="url" className="block text-sm font-medium text-on-surface-variant-light dark:text-on-surface-variant-dark mb-1">URL</label>
-            <input type="url" id="url" value={url} onChange={e => setUrl(e.target.value)} required className="w-full input-style" />
+            <input type="url" id="url" value={url} onChange={e => { setUrl(e.target.value); setError(null); }} required className="w-full input-style" />
           </div>
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-on-surface-variant-light dark:text-on-surface-variant-dark mb-1">Description (Optional)</label>
-            <input type="text" id="description" value={description} onChange={e => setDescription(e.target.value)} className="w-full input-style" />
+            <input type="text" id="description" value={description} onChange={e => { setDescription(e.target.value); setError(null); }} className="w-full input-style" />
           </div>
           <div>
             <label className="block text-sm font-medium text-on-surface-variant-light dark:text-on-surface-variant-dark mb-1">Category</label>
             {!isNewCategory && allCategories.length > 0 && (
-              <select value={category} onChange={e => setCategory(e.target.value)} className="w-full input-style mb-2">
+              <select value={category} onChange={e => { setCategory(e.target.value); setError(null); }} className="w-full input-style mb-2">
                 {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             )}
             {isNewCategory && (
-              <input type="text" placeholder="New category name" value={newCategory} onChange={e => setNewCategory(e.target.value)} required className="w-full input-style mb-2" />
+              <input type="text" placeholder="New category name" value={newCategory} onChange={e => { setNewCategory(e.target.value); setError(null); }} required className="w-full input-style mb-2" />
             )}
             <div className="flex items-center">
               <input type="checkbox" id="newCategory" checked={isNewCategory} onChange={e => setIsNewCategory(e.target.checked)} className="h-4 w-4 rounded border-outline-variant-light text-primary-light focus:ring-primary-light" />

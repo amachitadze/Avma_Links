@@ -23,9 +23,12 @@ export const Icon: React.FC<IconProps> = ({ name, className, ...props }) => {
     install: <><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l-4-4m4 4l4-4m-4 4V3" /> <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 15v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4" /></>,
     login: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />,
     logout: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
-    loading: <path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z" />,
+    loading: <path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.50,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.50,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z" />,
     cloud: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.09A4.001 4.001 0 003 15z" />,
-    'cloud-off': <><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M22.61 16.95A5 5 0 0018 10h-1.26a8 8 0 00-7.05-6M5 5a8 8 0 004 15h9a5 5 0 001.7-.3" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1l22 22" /></>
+    'cloud-off': <><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M22.61 16.95A5 5 0 0018 10h-1.26a8 8 0 00-7.05-6M5 5a8 8 0 004 15h9a5 5 0 001.7-.3" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1l22 22" /></>,
+    folder: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />,
+    'arrow-up': <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />,
+    error: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   };
 
   return (

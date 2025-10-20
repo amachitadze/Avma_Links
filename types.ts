@@ -10,3 +10,5 @@ export interface LinkCategory {
   title: string;
   links: LinkItem[];
 }
+
+export type ViewMode = 'grid' | 'list' | 'chrome';

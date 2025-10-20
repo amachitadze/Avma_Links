@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import type { LinkCategory, LinkItem } from '../types.ts';
+import type { LinkCategory, LinkItem, ViewMode } from '../types.ts';
 import CategorySection from './CategorySection.tsx';
 import { Icon } from './icons.tsx';
 
 interface ChromeBookmarksViewerProps {
-  viewMode: 'grid' | 'list';
+  viewMode: ViewMode;
   onBack: () => void;
 }
 

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import type { LinkCategory, LinkItem } from '../types.ts';
+import type { LinkCategory, LinkItem, ViewMode } from '../types.ts';
 import LinkCard from './LinkCard.tsx';
+import { Icon } from './icons.tsx';
 
 interface CategorySectionProps {
   category: LinkCategory;
-  viewMode: 'grid' | 'list';
+  viewMode: ViewMode;
   onShowActionMenu: (link: LinkItem, categoryTitle: string) => void;
   isEditable: boolean;
   isMoveMode: boolean;
@@ -29,9 +30,10 @@ const CategorySection: React.FC<CategorySectionProps> = ({
 }) => {
   const [isOver, setIsOver] = useState(false);
   
-  const gridClasses = viewMode === 'grid' 
-    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' 
-    : 'flex flex-col gap-3';
+  const containerClasses = 
+    viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' 
+    : viewMode === 'list' ? 'flex flex-col gap-3'
+    : 'flex flex-col space-y-1 ml-2 pl-4 border-l-2 border-outline-variant-light/50 dark:border-outline-variant-dark/50';
 
   const isBeingDragged = draggedItemId === category.title;
 
@@ -98,14 +100,15 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         </h2>
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="text-sm px-3 py-1 rounded-full text-primary-light dark:text-primary-dark hover:bg-primary-light/10 dark:hover:bg-primary-dark/10 transition-colors focus:outline-none"
+          className="flex items-center text-sm px-3 py-1 rounded-full text-primary-light dark:text-primary-dark hover:bg-primary-light/10 dark:hover:bg-primary-dark/10 transition-colors focus:outline-none"
           aria-label="Back to top"
         >
-          Back to Top 🔝
+          <span className="mr-1.5">Back to Top</span>
+          <Icon name="arrow-up" className="w-4 h-4" />
         </button>
       </div>
       <div 
-        className={gridClasses}
+        className={containerClasses}
         onDragOver={(e) => {
            if (isMoveMode && isEditable) {
              e.preventDefault();
