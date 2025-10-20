@@ -11,7 +11,6 @@ import ViewControls from './components/ViewControls.tsx';
 import ChromeBookmarksViewer from './components/ChromeBookmarksViewer.tsx';
 import BottomActionMenu from './components/TopActionMenu.tsx';
 import MoveModeControls from './components/MoveModeControls.tsx';
-import { Icon } from './components/icons.tsx';
 
 type ViewMode = 'grid' | 'list';
 type ModalMode = 'add' | 'edit';
@@ -42,7 +41,22 @@ interface ActionMenuState {
 }
 
 const App: React.FC = () => {
-  const [linkData, setLinkData] = useState<LinkCategory[]>([]);
+  const [linkData, setLinkData] = useState<LinkCategory[]>(() => {
+    try {
+      const savedData = localStorage.getItem('linkData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        if (Array.isArray(parsedData) && parsedData.length > 0) {
+          return parsedData;
+        }
+      }
+    } catch (error) {
+      console.error("Could not load data from localStorage", error);
+    }
+    // Fallback to default data if nothing in localStorage or if it's invalid
+    return LINK_DATA;
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -63,90 +77,19 @@ const App: React.FC = () => {
   const [linkDataBeforeMove, setLinkDataBeforeMove] = useState<LinkCategory[] | null>(null);
 
   const [installPrompt, setInstallPrompt] = useState<any>(null);
-  
-  const [isLoading, setIsLoading] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // --- New Server Sync Logic ---
-
-  // Load data on initial mount
+  // --- Client-Side Data Persistence ---
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      try {
-        // 1. Try fetching from the server
-        const response = await fetch('/api/links');
-        if (response.ok) {
-          const serverData = await response.json();
-          setLinkData(serverData);
-          localStorage.setItem('linkData', JSON.stringify(serverData));
-          console.log("Data loaded from server and cached locally.");
-        } else {
-          // 404 or other error means no data on server yet, or server is down.
-          // Fallback to localStorage.
-          throw new Error('Server not reached or no data found.');
-        }
-      } catch (error) {
-        console.warn("Could not fetch from server. Falling back to local data.", error);
-        // 2. Fallback to localStorage
-        const savedData = localStorage.getItem('linkData');
-        if (savedData) {
-          try {
-            const parsedData = JSON.parse(savedData);
-            if (Array.isArray(parsedData) && parsedData.length > 0) {
-              setLinkData(parsedData);
-            } else {
-              setLinkData(LINK_DATA); // Local storage is empty/invalid
-            }
-          } catch (e) {
-            setLinkData(LINK_DATA); // Parsing error
-          }
-        } else {
-          // 3. Fallback to default data if nothing else is available
-          setLinkData(LINK_DATA);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-  
-  // Save data to server (debounced) and localStorage whenever it changes
-  const saveDataToServer = useCallback(async (data: LinkCategory[]) => {
     try {
-      await fetch('/api/links', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ linkData: data }),
-      });
-      console.log("Data successfully synced with the server.");
+      localStorage.setItem('linkData', JSON.stringify(linkData));
     } catch (error) {
-      console.error("Failed to sync data with the server. It's saved locally.", error);
+      console.error("Could not save data to localStorage", error);
     }
-  }, []);
-
-  useEffect(() => {
-    if (isLoading) return; // Don't save during initial load
-
-    // Save to local cache immediately for responsiveness
-    localStorage.setItem('linkData', JSON.stringify(linkData));
-    
-    // Debounce the server save call to avoid spamming the API on rapid changes
-    const handler = setTimeout(() => {
-      saveDataToServer(linkData);
-    }, 1000); // Wait 1 second after the last change to save
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [linkData, isLoading, saveDataToServer]);
+  }, [linkData]);
   
-  // --- End of Server Sync Logic ---
+  // --- End of Client-Side Logic ---
 
 
   useEffect(() => {
@@ -388,7 +331,6 @@ const App: React.FC = () => {
   const handleSaveMove = () => {
     setIsMoveMode(false);
     setLinkDataBeforeMove(null);
-    // The main useEffect will handle saving the final state to the server
   };
   
   const handleToggleMoveMode = () => {
@@ -402,17 +344,6 @@ const App: React.FC = () => {
 
   const isSearchActive = searchQuery.length > 0;
   const displayData = isSearchActive ? filteredLinkData : linkData;
-
-  if (isLoading) {
-    return (
-        <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark text-on-surface-light dark:text-on-surface-dark">
-            <div className="flex items-center gap-4">
-                <Icon name="loading" className="w-8 h-8 animate-spin" />
-                <span className="text-xl">Loading your links...</span>
-            </div>
-        </div>
-    );
-  }
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-on-surface-light dark:text-on-surface-dark min-h-screen transition-colors duration-300">
@@ -503,7 +434,7 @@ const App: React.FC = () => {
         onClose={() => setConfirmImportModalState({ isOpen: false, dataToImport: null })}
         onConfirm={confirmImport}
         title="Import Data"
-        message="This will overwrite all your current links and sync the new data to the server. Are you sure?"
+        message="This will overwrite all your current links. Are you sure?"
         confirmText="Import"
         confirmButtonClass="bg-primary-light dark:bg-primary-dark text-on-primary-light dark:text-on-primary-dark"
       />
