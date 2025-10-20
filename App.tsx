@@ -68,33 +68,85 @@ const App: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Load data from localStorage on initial mount
+  // --- New Server Sync Logic ---
+
+  // Load data on initial mount
   useEffect(() => {
-    const savedData = localStorage.getItem('linkData');
-    if (savedData) {
+    const loadData = async () => {
+      setIsLoading(true);
       try {
-        const parsedData = JSON.parse(savedData);
-        if (Array.isArray(parsedData) && parsedData.length > 0) {
-          setLinkData(parsedData);
+        // 1. Try fetching from the server
+        const response = await fetch('/api/links');
+        if (response.ok) {
+          const serverData = await response.json();
+          setLinkData(serverData);
+          localStorage.setItem('linkData', JSON.stringify(serverData));
+          console.log("Data loaded from server and cached locally.");
         } else {
-          setLinkData(LINK_DATA);
+          // 404 or other error means no data on server yet, or server is down.
+          // Fallback to localStorage.
+          throw new Error('Server not reached or no data found.');
         }
       } catch (error) {
-        console.error("Error parsing linkData from localStorage. Falling back to default data.", error);
-        setLinkData(LINK_DATA);
+        console.warn("Could not fetch from server. Falling back to local data.", error);
+        // 2. Fallback to localStorage
+        const savedData = localStorage.getItem('linkData');
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              setLinkData(parsedData);
+            } else {
+              setLinkData(LINK_DATA); // Local storage is empty/invalid
+            }
+          } catch (e) {
+            setLinkData(LINK_DATA); // Parsing error
+          }
+        } else {
+          // 3. Fallback to default data if nothing else is available
+          setLinkData(LINK_DATA);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      setLinkData(LINK_DATA);
-    }
-    setIsLoading(false);
+    };
+
+    loadData();
   }, []);
   
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem('linkData', JSON.stringify(linkData));
+  // Save data to server (debounced) and localStorage whenever it changes
+  const saveDataToServer = useCallback(async (data: LinkCategory[]) => {
+    try {
+      await fetch('/api/links', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ linkData: data }),
+      });
+      console.log("Data successfully synced with the server.");
+    } catch (error) {
+      console.error("Failed to sync data with the server. It's saved locally.", error);
     }
-  }, [linkData, isLoading]);
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) return; // Don't save during initial load
+
+    // Save to local cache immediately for responsiveness
+    localStorage.setItem('linkData', JSON.stringify(linkData));
+    
+    // Debounce the server save call to avoid spamming the API on rapid changes
+    const handler = setTimeout(() => {
+      saveDataToServer(linkData);
+    }, 1000); // Wait 1 second after the last change to save
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [linkData, isLoading, saveDataToServer]);
+  
+  // --- End of Server Sync Logic ---
 
 
   useEffect(() => {
@@ -336,6 +388,7 @@ const App: React.FC = () => {
   const handleSaveMove = () => {
     setIsMoveMode(false);
     setLinkDataBeforeMove(null);
+    // The main useEffect will handle saving the final state to the server
   };
   
   const handleToggleMoveMode = () => {
@@ -450,7 +503,7 @@ const App: React.FC = () => {
         onClose={() => setConfirmImportModalState({ isOpen: false, dataToImport: null })}
         onConfirm={confirmImport}
         title="Import Data"
-        message="This will overwrite all your current links. Are you sure you want to proceed?"
+        message="This will overwrite all your current links and sync the new data to the server. Are you sure?"
         confirmText="Import"
         confirmButtonClass="bg-primary-light dark:bg-primary-dark text-on-primary-light dark:text-on-primary-dark"
       />
