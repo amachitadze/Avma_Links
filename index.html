@@ -149,45 +149,57 @@
 }
 </script>
     
-    <!-- Service Worker Registration Script -->
+    <!-- Robust Service Worker & App Loader Script -->
     <script>
+      function loadApp() {
+        // This function creates and injects the main application script.
+        // It's called only after we are sure the service worker is in control.
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = './index.tsx';
+        document.body.appendChild(script);
+      }
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Construct the service worker URL relative to the document's location
-          // to ensure it resolves correctly to the same origin, even in sandboxed environments.
           const swUrl = new URL('service-worker.js', window.location.href).href;
-
           navigator.serviceWorker.register(swUrl)
             .then(registration => {
               console.log('Service Worker registered with scope:', registration.scope);
-              
-              // If there's no controller, the page was loaded without SW.
-              // We need to reload to let the SW take control for transpiling TSX.
-              if (!navigator.serviceWorker.controller) {
-                // Use sessionStorage to prevent a reload loop if SW activation fails.
-                if (!sessionStorage.getItem('sw_reloaded')) {
-                  sessionStorage.setItem('sw_reloaded', 'true');
-                  console.log('Reloading to activate service worker...');
-                  window.location.reload();
-                } else {
-                  // If we've already reloaded and there's still no controller, something is wrong.
-                  console.error('Service worker failed to take control after reload. Check SW logs for errors during installation or activation.');
+
+              // This function will be called when the service worker successfully activates and takes control.
+              const onControllerChange = () => {
+                if (navigator.serviceWorker.controller) {
+                  console.log('Service worker is now controlling the page. Loading app...');
+                  loadApp();
+                  // Clean up the listener once it has done its job.
+                  navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
                 }
+              };
+
+              // If a service worker is already controlling the page (e.g., on a refresh), load the app immediately.
+              if (navigator.serviceWorker.controller) {
+                console.log('Service worker is already in control. Loading app...');
+                loadApp();
+              } else {
+                // If there's no controller, it's the first visit. We wait for the newly registered
+                // service worker to activate and claim the page, which triggers the 'controllerchange' event.
+                console.log('Waiting for service worker to take control...');
+                navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
               }
             })
             .catch(error => {
               console.error('Service Worker registration failed:', error);
+              document.getElementById('root').textContent = 'Application failed to load. Please check your connection and try again.';
             });
-            
-          // Once the page is successfully controlled by a service worker, clear the reload flag.
-          if (navigator.serviceWorker.controller) {
-            sessionStorage.removeItem('sw_reloaded');
-          }
         });
+      } else {
+        // If service workers aren't supported, the app cannot run because it relies on the SW for transpilation.
+        document.getElementById('root').textContent = 'This browser does not support the features required to run this app.';
       }
     </script>
     
-    <!-- Main Application Script -->
-    <script type="module" src="./index.tsx"></script>
+    <!-- The main application script is now loaded programmatically by the script above -->
+    <!-- <script type="module" src="./index.tsx"></script> -->
   </body>
 </html>
