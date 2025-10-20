@@ -1,0 +1,22 @@
+
+{
+  "short_name": "Avma Links",
+  "name": "Avma Links",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/W44Mfs6S/Avma-Links.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.postimg.cc/W44Mfs6S/Avma-Links.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#f8fafc"
+}

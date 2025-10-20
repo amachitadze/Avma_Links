@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avma Links</title>
+    <meta name="description" content="Avma Links: A sleek, modern PWA to organize and quickly access your personal links." />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" type="image/png" href="https://i.postimg.cc/W44Mfs6S/Avma-Links.png" />
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/W44Mfs6S/Avma-Links.png" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS & Custom Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+      :root {
+        /* Light Theme */
+        --md-sys-color-primary-light: #00639C;
+        --md-sys-color-on-primary-light: #FFFFFF;
+        --md-sys-color-primary-container-light: #CFE5FF;
+        --md-sys-color-on-primary-container-light: #001D33;
+        --md-sys-color-background-light: #FDFBFF;
+        --md-sys-color-on-background-light: #1A1C1E;
+        --md-sys-color-surface-light: #FDFBFF;
+        --md-sys-color-on-surface-light: #1A1C1E;
+        --md-sys-color-surface-variant-light: #DFE2EB;
+        --md-sys-color-on-surface-variant-light: #43474E;
+        --md-sys-color-outline-light: #73777F;
+        --md-sys-color-outline-variant-light: #C3C7CF;
+        --md-sys-color-surface-container-low-light: #F7F2FA;
+        --md-sys-color-surface-container-light: #F1EDF4;
+        --md-sys-color-surface-container-high-light: #EBE7EF;
+        --md-sys-color-surface-container-highest-light: #E5E1E9;
+        --md-sys-color-error-light: #BA1A1A;
+        --md-sys-color-on-error-light: #FFFFFF;
+
+        /* Dark Theme */
+        --md-sys-color-primary-dark: #A0C9FF;
+        --md-sys-color-on-primary-dark: #003354;
+        --md-sys-color-primary-container-dark: #004A7D;
+        --md-sys-color-on-primary-container-dark: #CFE5FF;
+        --md-sys-color-background-dark: #1A1C1E;
+        --md-sys-color-on-background-dark: #E2E2E6;
+        --md-sys-color-surface-dark: #1A1C1E;
+        --md-sys-color-on-surface-dark: #E2E2E6;
+        --md-sys-color-surface-variant-dark: #43474E;
+        --md-sys-color-on-surface-variant-dark: #C3C7CF;
+        --md-sys-color-outline-dark: #8D9199;
+        --md-sys-color-outline-variant-dark: #43474E;
+        --md-sys-color-surface-container-low-dark: #1F2123;
+        --md-sys-color-surface-container-dark: #242628;
+        --md-sys-color-surface-container-high-dark: #2E3032;
+        --md-sys-color-surface-container-highest-dark: #393B3D;
+        --md-sys-color-error-dark: #FFB4AB;
+        --md-sys-color-on-error-dark: #690005;
+      }
+
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color: var(--md-sys-color-background-light);
+        color: var(--md-sys-color-on-background-light);
+      }
+      .dark body {
+        background-color: var(--md-sys-color-background-dark);
+        color: var(--md-sys-color-on-background-dark);
+      }
+      #root:empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      #root:empty::after {
+        content: "Loading...";
+        font-size: 1.5rem;
+      }
+      body.dragging, body.dragging * {
+        cursor: grabbing !important;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'primary-light': 'var(--md-sys-color-primary-light)',
+              'on-primary-light': 'var(--md-sys-color-on-primary-light)',
+              'primary-container-light': 'var(--md-sys-color-primary-container-light)',
+              'on-primary-container-light': 'var(--md-sys-color-on-primary-container-light)',
+              'background-light': 'var(--md-sys-color-background-light)',
+              'on-background-light': 'var(--md-sys-color-on-background-light)',
+              'surface-light': 'var(--md-sys-color-surface-light)',
+              'on-surface-light': 'var(--md-sys-color-on-surface-light)',
+              'surface-variant-light': 'var(--md-sys-color-surface-variant-light)',
+              'on-surface-variant-light': 'var(--md-sys-color-on-surface-variant-light)',
+              'outline-light': 'var(--md-sys-color-outline-light)',
+              'outline-variant-light': 'var(--md-sys-color-outline-variant-light)',
+              'surface-container-low-light': 'var(--md-sys-color-surface-container-low-light)',
+              'surface-container-light': 'var(--md-sys-color-surface-container-light)',
+              'surface-container-high-light': 'var(--md-sys-color-surface-container-high-light)',
+              'surface-container-highest-light': 'var(--md-sys-color-surface-container-highest-light)',
+              'error-light': 'var(--md-sys-color-error-light)',
+              'on-error-light': 'var(--md-sys-color-on-error-light)',
+
+              'primary-dark': 'var(--md-sys-color-primary-dark)',
+              'on-primary-dark': 'var(--md-sys-color-on-primary-dark)',
+              'primary-container-dark': 'var(--md-sys-color-primary-container-dark)',
+              'on-primary-container-dark': 'var(--md-sys-color-on-primary-container-dark)',
+              'background-dark': 'var(--md-sys-color-background-dark)',
+              'on-background-dark': 'var(--md-sys-color-on-background-dark)',
+              'surface-dark': 'var(--md-sys-color-surface-dark)',
+              'on-surface-dark': 'var(--md-sys-color-on-surface-dark)',
+              'surface-variant-dark': 'var(--md-sys-color-surface-variant-dark)',
+              'on-surface-variant-dark': 'var(--md-sys-color-on-surface-variant-dark)',
+              'outline-dark': 'var(--md-sys-color-outline-dark)',
+              'outline-variant-dark': 'var(--md-sys-color-outline-variant-dark)',
+              'surface-container-low-dark': 'var(--md-sys-color-surface-container-low-dark)',
+              'surface-container-dark': 'var(--md-sys-color-surface-container-dark)',
+              'surface-container-high-dark': 'var(--md-sys-color-surface-container-high-dark)',
+              'surface-container-highest-dark': 'var(--md-sys-color-surface-container-highest-dark)',
+              'error-dark': 'var(--md-sys-color-error-dark)',
+              'on-error-dark': 'var(--md-sys-color-on-error-dark)',
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="importmap">
+{
+  "imports": {
+    "webworker": "https://aistudiocdn.com/webworker@^0.8.4",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+    
+    <!-- Service Worker Registration Script -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Construct the service worker URL relative to the document's location
+          // to ensure it resolves correctly to the same origin, even in sandboxed environments.
+          const swUrl = new URL('service-worker.js', window.location.href).href;
+
+          navigator.serviceWorker.register(swUrl)
+            .then(registration => {
+              console.log('Service Worker registered with scope:', registration.scope);
+              
+              // If there's no controller, the page was loaded without SW.
+              // We need to reload to let the SW take control for transpiling TSX.
+              if (!navigator.serviceWorker.controller) {
+                // Use sessionStorage to prevent a reload loop if SW activation fails.
+                if (!sessionStorage.getItem('sw_reloaded')) {
+                  sessionStorage.setItem('sw_reloaded', 'true');
+                  console.log('Reloading to activate service worker...');
+                  window.location.reload();
+                } else {
+                  // If we've already reloaded and there's still no controller, something is wrong.
+                  console.error('Service worker failed to take control after reload. Check SW logs for errors during installation or activation.');
+                }
+              }
+            })
+            .catch(error => {
+              console.error('Service Worker registration failed:', error);
+            });
+            
+          // Once the page is successfully controlled by a service worker, clear the reload flag.
+          if (navigator.serviceWorker.controller) {
+            sessionStorage.removeItem('sw_reloaded');
+          }
+        });
+      }
+    </script>
+    
+    <!-- Main Application Script -->
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>
