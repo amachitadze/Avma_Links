@@ -3,66 +3,19 @@
 // Import the Sucrase transpiler
 importScripts('https://unpkg.com/sucrase/dist/index.js');
 
-const CACHE_NAME = 'resource-hub-cache-v11'; // Incremented version
+const CACHE_NAME = 'resource-hub-cache-v12'; // Incremented version to ensure SW update
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('Service Worker: Caching app shell and resources');
-
-      const RELATIVE_URLS_TO_CACHE = [
-        // App shell
-        '', // For the root path
-        'index.html',
-        'manifest.json',
-        'index.tsx', 
-        'App.tsx',
-        'types.ts',
-        'constants.ts',
-        // Components
-        'components/AddLinkFab.tsx',
-        'components/CategorySection.tsx',
-        'components/ChromeBookmarksViewer.tsx',
-        'components/ConfirmationModal.tsx',
-        'components/TopActionMenu.tsx',
-        'components/HamburgerMenu.tsx',
-        'components/Header.tsx',
-        'components/icons.tsx',
-        'components/LinkCard.tsx',
-        'components/LinkModal.tsx',
-        'components/MoveModeControls.tsx',
-        'components/SearchBar.tsx',
-        'components/ViewControls.tsx',
-      ];
-      
-      const ABSOLUTE_URLS_TO_CACHE = [
-        'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap',
-        'https://cdn.tailwindcss.com',
-        'https://unpkg.com/sucrase/dist/index.js',
-      ];
-      
-      // Construct full, absolute URLs from the SW's scope
-      const urlsToCache = RELATIVE_URLS_TO_CACHE.map(relativeUrl => {
-        return new URL(relativeUrl, self.registration.scope).href;
-      }).concat(ABSOLUTE_URLS_TO_CACHE);
-
-      // Use a Set to prevent duplicates (e.g., scope URL and scope URL + 'index.html')
-      const uniqueUrlsToCache = [...new Set(urlsToCache)];
-      
-      console.log('Service Worker: Caching the following URLs:', uniqueUrlsToCache);
-      
-      try {
-        await cache.addAll(uniqueUrlsToCache);
-      } catch (error) {
-        console.error('Failed to cache resources during install:', error);
-        // Let the promise reject to indicate a failed installation
-        throw error;
-      }
-    })
-  );
+  // By calling skipWaiting(), the new service worker activates immediately
+  // once it has finished installing. This makes updates faster and more reliable.
+  // Caching will be handled dynamically by the fetch event handler instead of
+  // upfront, which prevents the entire installation from failing.
+  console.log('Service Worker: Installing...');
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('Service Worker: Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -75,6 +28,9 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
+        // claim() is crucial. It allows an active service worker to set itself
+        // as the controller for all clients within its scope immediately.
+        console.log('Service Worker: Claiming clients...');
         return self.clients.claim();
     })
   );
