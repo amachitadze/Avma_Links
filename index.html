@@ -162,8 +162,8 @@
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          const swUrl = new URL('service-worker.js', window.location.href).href;
-          navigator.serviceWorker.register(swUrl)
+          // Use a simple, relative path for maximum compatibility.
+          navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
               console.log('Service Worker registered with scope:', registration.scope);
 
