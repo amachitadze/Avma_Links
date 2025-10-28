@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Avma Links</title>
-    <base href="/Avma_Links/">
+    
     <meta name="description" content="Avma Links: A sleek, modern PWA to organize and quickly access your personal links." />
     <meta name="theme-color" content="#ffffff" />
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     <link rel="icon" type="image/png" href="https://i.postimg.cc/W44Mfs6S/Avma-Links.png" />
     <link rel="apple-touch-icon" href="https://i.postimg.cc/W44Mfs6S/Avma-Links.png" />
     
@@ -156,17 +156,16 @@
         // It's called only after we are sure the service worker is in control.
         const script = document.createElement('script');
         script.type = 'module';
-        // This src is relative, but the <base> tag above ensures it resolves correctly
-        // to /Avma_Links/index.tsx
-        script.src = 'index.tsx';
+        // This src is now relative to this HTML file, making it robust for sub-directory deployments.
+        script.src = './index.tsx';
         document.body.appendChild(script);
       }
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Use a full, absolute path for the service worker for maximum reliability on GitHub Pages.
-          const swUrl = '/Avma_Links/service-worker.js';
-          navigator.serviceWorker.register(swUrl, { scope: '/Avma_Links/' })
+          // Use a relative path for the service worker and scope for maximum reliability on GitHub Pages.
+          const swUrl = './service-worker.js';
+          navigator.serviceWorker.register(swUrl, { scope: './' })
             .then(registration => {
               console.log('Service Worker registered with scope:', registration.scope);
 
