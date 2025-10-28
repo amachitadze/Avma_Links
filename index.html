@@ -156,35 +156,32 @@
         // It's called only after we are sure the service worker is in control.
         const script = document.createElement('script');
         script.type = 'module';
+        // This src is relative, but the <base> tag above ensures it resolves correctly
+        // to /Avma_Links/index.tsx
         script.src = 'index.tsx';
         document.body.appendChild(script);
       }
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Use an absolute path for the service worker for reliability on GitHub Pages.
+          // Use a full, absolute path for the service worker for maximum reliability on GitHub Pages.
           const swUrl = '/Avma_Links/service-worker.js';
-          navigator.serviceWorker.register(swUrl)
+          navigator.serviceWorker.register(swUrl, { scope: '/Avma_Links/' })
             .then(registration => {
               console.log('Service Worker registered with scope:', registration.scope);
 
-              // This function will be called when the service worker successfully activates and takes control.
               const onControllerChange = () => {
                 if (navigator.serviceWorker.controller) {
                   console.log('Service worker is now controlling the page. Loading app...');
                   loadApp();
-                  // Clean up the listener once it has done its job.
                   navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
                 }
               };
 
-              // If a service worker is already controlling the page (e.g., on a refresh), load the app immediately.
               if (navigator.serviceWorker.controller) {
                 console.log('Service worker is already in control. Loading app...');
                 loadApp();
               } else {
-                // If there's no controller, it's the first visit. We wait for the newly registered
-                // service worker to activate and claim the page, which triggers the 'controllerchange' event.
                 console.log('Waiting for service worker to take control...');
                 navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
               }
@@ -195,12 +192,9 @@
             });
         });
       } else {
-        // If service workers aren't supported, the app cannot run because it relies on the SW for transpilation.
         document.getElementById('root').textContent = 'This browser does not support the features required to run this app.';
       }
     </script>
     
-    <!-- The main application script is now loaded programmatically by the script above -->
-    <!-- <script type="module" src="./index.tsx"></script> -->
   </body>
 </html>
